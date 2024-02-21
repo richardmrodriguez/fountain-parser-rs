@@ -15,7 +15,7 @@
 
 //  Relased under GPL
 
-use enum_iterator::last;
+use enum_iterator::{first, last};
 use std::io::empty;
 use std::str::FromStr;
 use std::vec;
@@ -167,49 +167,29 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
         return line_type;
     }
 
-    /*
-
     // --------- Check for Dual Dialogue
-    dual_dialogue_result: LineType  = cls._check_if_dual_dialogue(
-        line=line,
-        previous_line=previous_line,
-        next_line=next_line
-        )
-    if dual_dialogue_result is not None:
-        return dual_dialogue_result
-
+    let dual_dialogue_result = _check_if_dual_dialogue(line, &previous_line);
+    if let Some(line_type) = dual_dialogue_result {
+        return line_type;
+    }
     // --------- Character
-    character_result: LineType  = cls._check_if_character(
-        line=line,
-        next_line=next_line,
-        twoLinesOver=lines[index+2] if (index + 2 < len(lines)) else None,
-        index=index,
-        previous_line=previous_line
-        )
-    if character_result is not None:
-        return character_result
+    let twoLinesOver_option: Option<&FNLine> = lines.get(index + 2);
+
+    let character_result: Option<LineType> = _check_if_character(line, &previous_line);
+    if let Some(line_type) = character_result {
+        return line_type;
+    }
 
     // --------- Dialogue or Parenthetical
-    dialogue_or_parenthetical_result: LineType  = cls._check_if_dialogue_or_parenthetical(
-        line=line,
-        previous_line=previous_line,
-    )
-    if dialogue_or_parenthetical_result is not None:
-        return dialogue_or_parenthetical_result */
+    let dialogue_or_parenthetical_result: Option<LineType> =
+        _check_if_dialogue_or_parenthetical(line, &previous_line);
+    if let Some(line_type) = dialogue_or_parenthetical_result {
+        return line_type;
+    }
 
     // --------- Default
     LineType::Action
 }
-// ---------- Parsing helper funcs ----------
-
-/* def _only_uppercase_until_parenthesis(text: str): // Might want to move this func to helper_funcs to be cleaner
-until_parenthesis = text.split("(")[0]
-if (
-    until_parenthesis == until_parenthesis.upper()
-    and len(until_parenthesis) > 0
-):
-return True
-return False */
 
 // ---------- Parsing sub-functions ----------
 fn _check_if_transition(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
@@ -223,26 +203,30 @@ fn _check_if_transition(line: &FNLine, previous_line_is_empty: &bool) -> Option<
 
     None
 }
-/* def _check_if_dialogue_or_parenthetical(line: FNLine, previous_line: FNLine):
-if line.string.startswith("  "):
-    print("Non empty line here!")
-if previous_line is None:
-    return None
+fn _check_if_dialogue_or_parenthetical(
+    line: &FNLine,
+    previous_line: &Result<&FNLine, &str>,
+) -> Option<LineType> {
+    match previous_line {
+        Ok(pl) => {
+            if pl.is_dialogue() && pl.string.len() > 0 {
+                if line.string.graphemes(true).nth(0) == Some("(") {
+                    return Some(LineType::Parenthetical);
+                }
+                return Some(LineType::Dialogue);
+            }
+            if pl.fn_type == LineType::Parenthetical {
+                return Some(LineType::Dialogue);
+            }
+        }
+        Err(_) => return None,
+    }
 
-if (
-    previous_line.isDialogue()
-    and len(previous_line.string) > 0
-    ):
-    if (line.string[:1] == '(' ):
-        return LineType.parenthetical
-    return LineType.dialogue
-
-if previous_line.fn_type == LineType.parenthetical:
-    return LineType.dialogue
-
-if line.string.startswith("  "):
-    return LineType.dialogue */
-
+    if line.string.starts_with("  ") {
+        return Some(LineType::Dialogue);
+    }
+    return None;
+}
 fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
     if !previous_line_is_empty && line.string.len() >= 3 {
         return None;
@@ -271,8 +255,6 @@ fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<Lin
 }
 
 fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
-    //TODO: use graphemes instead of character indexing
-
     let first_grapheme_option: Option<&str> = line.string.graphemes(true).nth(0);
     let last_grapheme_option: Option<&str> = line.string.graphemes(true).last();
 
@@ -283,7 +265,7 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
     let first_grapheme = first_grapheme_option.unwrap_or_default();
     let last_grapheme = last_grapheme_option.unwrap_or_default();
 
-    // TODO: convert local string index to global (document) string index in order to check if a char is an escape backslash or not
+    // TODO:
     // Check for escaped characters
     // if (firstChar == '\\'):
     //    first_unescaped = hf.find_first_unescaped_char_in_string(line.string)
@@ -406,32 +388,31 @@ fn _check_if_title_page_element(
     None
 }
 
-/* def _check_if_character(line: FNLine, next_line: FNLine, twoLinesOver: FNLine, index: i32, previous_line: FNLine) -> LineType:
+fn _check_if_character(line: &FNLine, previous_line: &Result<&FNLine, &str>) -> Option<LineType> {
+    use crate::helper_funcs::only_uppercase_until_parenthesis;
+    if !(only_uppercase_until_parenthesis(&line.string) && line.string != "") {
+        return None;
+    }
+    if line.string != line.string.trim() {
+        if line.string.starts_with("  ") {
+            return None;
+        }
+    }
+    let last_char_opt = line.string.graphemes(true).last();
 
-if not (hf.only_uppercase_until_parenthesis(line.string) and line.string != ""):
-    return None
-
-if line.string != line.string.strip():
-    if line.string.startswith("  "):
-        return None
-
-lastChar = line.string[-1:]
-// A character line ending in ^ is a dual dialogue character
-// (94 = ^, we'll compare the numerical value to avoid mistaking Tuskic alphabet character Ş as ^)
-#if list(line.noteRanges) != []:
-    #if sorted(list(line.noteRanges))[0] != 0: // get first ordered numerical value in noteRanges? #NOTE: Not 100% sure what this condition is tbh
-if (ord(lastChar) == 94):
-
-    // Note the previous character cue that it's followed by dual dialogue
-    // self.makeCharacterAwareOfItsDualSiblingFrom(index) #NOTE: Does the parser need to be responsible for this?
-    return LineType.dualDialogueCharacter
-
-// Check if this line is actually just an ALLCAPS action line
-if previous_line is not None:
-    if previous_line.fn_type != LineType.empty:
-        return LineType.action
-
-return LineType.character */
+    if last_char_opt == Some("^") {
+        // Note the previous character cue that it's followed by dual dialogue
+        // self.makeCharacterAwareOfItsDualSiblingFrom(index) #NOTE: Does the parser need to be responsible for this?
+        return Some(LineType::DualDialogueCharacter);
+    }
+    // Check if this line is actually just an ALLCAPS action line
+    if let Ok(pl) = previous_line {
+        if pl.fn_type != LineType::Empty {
+            return Some(LineType::Action);
+        }
+    }
+    return Some(LineType::Character);
+}
 
 fn _check_if_empty_lines(line: &FNLine) -> Option<LineType> {
     if line.string.len() == 0 {
@@ -440,16 +421,30 @@ fn _check_if_empty_lines(line: &FNLine) -> Option<LineType> {
         None
     }
 }
-/* def _check_if_dual_dialogue(line: FNLine, previous_line: FNLine, next_line: FNLine = None,) -> LineType:
-if previous_line is not None:
-    if (
-        previous_line.isDualDialogue()
-        )
+fn _check_if_dual_dialogue(
+    line: &FNLine,
+    previous_line: &Result<&FNLine, &str>,
+) -> Option<LineType> {
+    match previous_line {
+        Ok(pl) => {
+            if !pl.is_dual_dialogue() {
+                return None;
+            }
 
-        if line.string[0] == "(":
-            return LineType.dualDialogueParenthetical
-        else:
-            return LineType.dualDialogue
+            let first_grapheme_option: Option<&str> = line.string.graphemes(true).nth(0);
+            match first_grapheme_option {
+                Some(gp) => {
+                    if gp == "(" {
+                        return Some(LineType::DualDialogueParenthetical);
+                    }
+                    return Some(LineType::DualDialogue);
+                }
 
-else:
-    return None */
+                None => return None,
+            }
+        }
+        Err(_) => {
+            return None;
+        }
+    }
+}

@@ -20,8 +20,8 @@ int. HOUSE - NIGHT
 
 !!SHOT
 
-@LADY
-  
+LADY
+Aargh!
 (Screaming)
 Get out of my house, you demons!
   
@@ -31,7 +31,7 @@ The lady swings a big sword,
 SLASHES,
 and destroys a perfectly good sofa.
 
-@LADY 2^
+LADY 2^
 (Also Screaming)
   
 Yeah, get out!

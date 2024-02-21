@@ -5,6 +5,7 @@ use std::fs;
 
 pub mod fountain_consts;
 pub mod fountain_line;
+pub mod helper_funcs;
 pub mod location_and_length;
 pub mod static_fountain_parser;
 
