@@ -2,7 +2,7 @@
 
 This library is for parsing [Fountain](https://fountain.io/syntax/)-formatted plain text files.
 
-This provides the ability to categorize a Fountain-formatted screenplay so it may be rendered into a PDF, or otherwise displayed in a coherent manner.
+This provides the ability to categorize the elements of a Fountain-formatted screenplay, so that each element may be properly rendered by an external renderer (PDF, HTML, etc.).
 
 ## Status
 
