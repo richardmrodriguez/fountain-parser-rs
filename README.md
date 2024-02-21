@@ -6,7 +6,9 @@ This provides the ability to categorize a Fountain-formatted screenplay so it ma
 
 ## Status
 
-This parser is partially functional. See the tests in `lib.rs`.
+The Static Parser now handles all screenplay elements, except for Notes and Boneyards. The static parser does not handle *emphasis* such as Bold, Italic, or Underlines.
+
+See the tests in `lib.rs`.
 
 ## Special Thanks
 
