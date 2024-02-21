@@ -204,24 +204,18 @@ fn _check_if_dialogue_or_parenthetical(
     line: &FNLine,
     previous_line: &Result<&FNLine, &str>,
 ) -> Option<LineType> {
-    match previous_line {
-        Ok(pl) => {
-            if pl.is_dialogue() && pl.string.len() > 0 {
-                if line.string.graphemes(true).nth(0) == Some("(") {
-                    return Some(LineType::Parenthetical);
-                }
-                return Some(LineType::Dialogue);
+    if let Ok(pl) = previous_line {
+        if pl.is_dialogue() && pl.string.len() > 0 {
+            if line.string.graphemes(true).nth(0) == Some("(") {
+                return Some(LineType::Parenthetical);
             }
-            if pl.fn_type == LineType::Parenthetical {
-                return Some(LineType::Dialogue);
-            }
+            return Some(LineType::Dialogue);
         }
-        Err(_) => return None,
+        if pl.fn_type == LineType::Parenthetical {
+            return Some(LineType::Dialogue);
+        }
     }
 
-    if line.string.starts_with("  ") {
-        return Some(LineType::Dialogue);
-    }
     return None;
 }
 fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
@@ -245,10 +239,12 @@ fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<Lin
 
     // To avoid words like "international" from becoming headings, the extension HAS to end with either dot, space or slash
     let next_grapheme = line.string.graphemes(true).nth(4);
-    if next_grapheme == Some(".") || next_grapheme == Some(" ") || next_grapheme == Some("/") {
-        return Some(LineType::Heading);
+    match next_grapheme {
+        Some(".") | Some(" ") | Some("/") => {
+            return Some(LineType::Heading);
+        }
+        _ => return None,
     }
-    return None;
 }
 
 fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
