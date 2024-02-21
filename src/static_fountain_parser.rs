@@ -1,15 +1,13 @@
 //  static_fountain_parser.rs
-//  Beat
-//
+
 //  Copyright © 2016 Hendrik Noeller. All rights reserved.
 //  Parts copyright © 2019-2023 Lauri-Matti Parppei. All rights reserved.
-
 //  Parts copyright © 2024 Richard Mamaril Rodriguez. All rights reserved.
 
 // This parser is based upon the ContinuousFountainParser from Lauri-Matti Parppei's Beat,
 // which itself is based upon Writer by Hendrik Noeller.
 
-// This has been ported / translated from Objective-C to Python.
+// This has been ported / translated from Objective-C to Rust.
 // As a result, many omissions and structural changes are made,
 // though the core parsing logic remains largely the same.
 
