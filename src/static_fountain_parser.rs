@@ -111,7 +111,7 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
         line = line_ref;
     }
 
-    let mut next_line: Result<&FNLine, &str> = Result::Err("No previous line.");
+    //let mut next_line: Result<&FNLine, &str> = Result::Err("No previous line.");
     let mut previous_line: Result<&FNLine, &str> = Result::Err("No next line.");
 
     if !lines.is_empty() {
@@ -119,7 +119,7 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
             previous_line = Ok(&lines[index - 1]);
         }
         if { index + 1 } < lines.len() {
-            next_line = Ok(&lines[index + 1]);
+            //next_line = Ok(&lines[index + 1]);
         }
     }
 
@@ -171,7 +171,6 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
         return line_type;
     }
     // --------- Character
-    let twoLinesOver_option: Option<&FNLine> = lines.get(index + 2);
 
     let character_result: Option<LineType> = _check_if_character(line, &previous_line);
     if let Some(line_type) = character_result {
@@ -226,7 +225,7 @@ fn _check_if_dialogue_or_parenthetical(
     return None;
 }
 fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
-    if !previous_line_is_empty && line.string.len() >= 3 {
+    if !(*previous_line_is_empty && line.string.len() >= 3) {
         return None;
     }
     let first_3_graphemes = line
@@ -236,16 +235,16 @@ fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<Lin
         .collect::<Vec<&str>>()
         .join("");
 
-    let _ = match first_3_graphemes.as_str() {
+    match first_3_graphemes.to_lowercase().as_str() {
         "int" => {}
         "ext" => {}
         "est" => {}
         "i/e" => {}
         _ => return None,
-    };
+    }
 
     // To avoid words like "international" from becoming headings, the extension HAS to end with either dot, space or slash
-    let next_grapheme = line.string.graphemes(true).skip(3).next();
+    let next_grapheme = line.string.graphemes(true).nth(4);
     if next_grapheme == Some(".") || next_grapheme == Some(" ") || next_grapheme == Some("/") {
         return Some(LineType::Heading);
     }
@@ -423,26 +422,18 @@ fn _check_if_dual_dialogue(
     line: &FNLine,
     previous_line: &Result<&FNLine, &str>,
 ) -> Option<LineType> {
-    match previous_line {
-        Ok(pl) => {
-            if !pl.is_dual_dialogue() {
-                return None;
-            }
-
-            let first_grapheme_option: Option<&str> = line.string.graphemes(true).nth(0);
-            match first_grapheme_option {
-                Some(gp) => {
-                    if gp == "(" {
-                        return Some(LineType::DualDialogueParenthetical);
-                    }
-                    return Some(LineType::DualDialogue);
-                }
-
-                None => return None,
-            }
-        }
-        Err(_) => {
+    if let Ok(pl) = previous_line {
+        if !pl.is_dual_dialogue() {
             return None;
         }
+
+        if let Some(gp) = line.string.graphemes(true).nth(0) {
+            if gp == "(" {
+                return Some(LineType::DualDialogueParenthetical);
+            }
+            return Some(LineType::DualDialogue);
+        }
+        return None;
     }
+    return None;
 }
