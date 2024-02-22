@@ -25,16 +25,44 @@ use crate::fountain_consts::LineType;
 use crate::fountain_line::FNLine;
 
 // ----- Public Functions -----
+
+/// This function takes a raw string `text` which represents an entire document or file.
+///
+/// This returns a list of fountain-parsed `FNLine` objects. Each `FNLine` contains the `string`, the `LineType` for the line, and other metadata as properties.
+///
 pub fn get_parsed_lines_from_raw_string(text: String) -> Vec<FNLine> {
-    /*
-    This function takes a raw string `text` which represents an entire document or file.
-
-    This returns a list of fountain-parsed `FNLine` objects. Each `FNLine` contains the `string`, the `LineType` for the line, and other metadata as properties.
-    */
-
     let lines: Vec<FNLine> = get_unparsed_line_array_from_raw_string(Some(text));
 
     get_parsed_lines_from_line_vec(lines)
+}
+
+pub fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLine> {
+    let mut unparsed_lines: Vec<FNLine> = vec![];
+
+    let raw_text = match text {
+        Some(the_text) => the_text,
+        None => String::from(""),
+    };
+
+    // if (text == None): text = ""
+    let fixed_text = raw_text.replace("\r\n", "\n"); // Replace MS Word/Windows line breaks with unix newlines
+
+    let raw_lines = fixed_text.lines();
+    let mut position: i32 = 0; // To track at which position every line begins
+
+    for r in raw_lines {
+        unparsed_lines.push(FNLine {
+            fn_type: LineType::Unparsed,
+            string: r.to_string(),
+            original_string: r.to_string(),
+            position: position,
+            ..Default::default()
+        });
+        let grapheme_len = r.graphemes(true).count();
+        position += (grapheme_len + 1) as i32; // +1 is to account for newline character
+    }
+
+    unparsed_lines
 }
 
 // ----- Private Functions -----
@@ -68,34 +96,6 @@ fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
     cloned_lines_vec
 }
 
-fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLine> {
-    let mut unparsed_lines: Vec<FNLine> = vec![];
-
-    let raw_text = match text {
-        Some(the_text) => the_text,
-        None => String::from(""),
-    };
-
-    // if (text == None): text = ""
-    let fixed_text = raw_text.replace("\r\n", "\n"); // Replace MS Word/Windows line breaks with unix newlines
-
-    let raw_lines = fixed_text.lines();
-    let mut position: i32 = 0; // To track at which position every line begins
-
-    for r in raw_lines {
-        unparsed_lines.push(FNLine {
-            fn_type: LineType::Unparsed,
-            string: r.to_string(),
-            original_string: r.to_string(),
-            position: position,
-            ..Default::default()
-        });
-        let grapheme_len = r.graphemes(true).count();
-        position += (grapheme_len + 1) as i32; // +1 is to account for newline character
-    }
-
-    unparsed_lines
-}
 // Parses the line type for given line. It *has* to know its line index.
 
 fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
@@ -216,7 +216,7 @@ fn _check_if_dialogue_or_parenthetical(
         }
     }
 
-    return None;
+    None
 }
 fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<LineType> {
     if !(*previous_line_is_empty && line.string.len() >= 3) {
@@ -243,7 +243,7 @@ fn _check_if_heading(line: &FNLine, previous_line_is_empty: &bool) -> Option<Lin
         Some(".") | Some(" ") | Some("/") => {
             return Some(LineType::Heading);
         }
-        _ => return None,
+        _ => None,
     }
 }
 
@@ -269,10 +269,10 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
     // --------- Forced whitespace
     let contains_only_whitespace: bool = line.string.trim().is_empty();
 
-    // Save to use again later
-    let two_spaces: bool = first_grapheme == " " && last_grapheme == " " && line.string.len() > 1; // Contains at least two spaces
+    let contains_at_least_two_spaces: bool =
+        first_grapheme == " " && last_grapheme == " " && line.string.len() > 1;
 
-    if contains_only_whitespace && !two_spaces {
+    if contains_only_whitespace && !contains_at_least_two_spaces {
         return Some(LineType::Empty);
     }
 
@@ -301,18 +301,15 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
         if line.string.len() > 1 {
             let second_grapheme_option = line.string.graphemes(true).nth(1);
 
-            match second_grapheme_option {
-                Some(sg) => {
-                    if sg != "." {
-                        return Some(LineType::Heading);
-                    }
-                    return None;
+            if let Some(sg) = second_grapheme_option {
+                if sg != "." {
+                    return Some(LineType::Heading);
                 }
-                None => return None,
-            };
-        } else {
-            return Some(LineType::Heading);
+            }
+            return None;
         }
+
+        return Some(LineType::Heading);
     }
 
     // Rest of the FORCED FNLine Types
@@ -321,7 +318,7 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
             if last_grapheme == "<" {
                 return Some(LineType::Centered);
             }
-            return Some(LineType::TransitionLine);
+            Some(LineType::TransitionLine)
         }
         "~" => Some(LineType::Lyrics),
         "=" => Some(LineType::Synopse),
@@ -356,9 +353,7 @@ fn _check_if_title_page_element(
 
     if key.len() > 0 && !key.is_empty() {
         match key.as_str() {
-            "title" => {
-                return Some(LineType::TitlePageTitle);
-            }
+            "title" => return Some(LineType::TitlePageTitle),
             "author" => return Some(LineType::TitlePageAuthor),
             "authors" => return Some(LineType::TitlePageAuthor),
             "credit" => return Some(LineType::TitlePageCredit),
@@ -394,8 +389,6 @@ fn _check_if_character(line: &FNLine, previous_line: &Result<&FNLine, &str>) -> 
     let last_char_opt = line.string.graphemes(true).last();
 
     if last_char_opt == Some("^") {
-        // Note the previous character cue that it's followed by dual dialogue
-        // self.makeCharacterAwareOfItsDualSiblingFrom(index) #NOTE: Does the parser need to be responsible for this?
         return Some(LineType::DualDialogueCharacter);
     }
     // Check if this line is actually just an ALLCAPS action line
@@ -404,7 +397,7 @@ fn _check_if_character(line: &FNLine, previous_line: &Result<&FNLine, &str>) -> 
             return Some(LineType::Action);
         }
     }
-    return Some(LineType::Character);
+    Some(LineType::Character)
 }
 
 fn _check_if_empty_lines(line: &FNLine) -> Option<LineType> {
@@ -431,5 +424,6 @@ fn _check_if_dual_dialogue(
         }
         return None;
     }
-    return None;
+
+    None
 }
