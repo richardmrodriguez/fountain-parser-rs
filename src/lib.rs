@@ -1,21 +1,25 @@
 // This Fountain Parsing library uses code derived from "Beat", by Lauri-Matti Parppei.
 // "Beat" Github: https://github.com/lmparppei/Beat/
 
+use std::collections::HashSet;
 use std::fs;
 
 pub mod fountain_consts;
 pub mod fountain_line;
 pub mod helper_funcs;
 pub mod location_and_length;
+pub mod partial_line_resolver;
 pub mod static_fountain_parser;
-
 use fountain_line::FNLine;
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::{collections::HashSet, fs};
 
-    use crate::{fountain_line::FNLine, static_fountain_parser};
+    use crate::{
+        fountain_consts::FNRangedElementType, fountain_line::FNLine, partial_line_resolver,
+        static_fountain_parser,
+    };
 
     #[test]
     #[ignore = "reason"]
@@ -40,6 +44,26 @@ mod tests {
             Err(err) => {
                 eprintln!("The test file or file path was not valid. {}", err)
             }
+        }
+    }
+
+    #[test]
+    fn test_ranged_indices() {
+        let file_path = "fountain_test_files/ranged_items_partial_line_test";
+        let file_result: Result<String, std::io::Error> = fs::read_to_string(file_path);
+        if let Ok(document_string) = file_result {
+            let unparsed_lines: Vec<FNLine> =
+                static_fountain_parser::get_unparsed_line_array_from_raw_string(Some(
+                    document_string,
+                ));
+
+            let indices: Option<std::collections::HashMap<String, HashSet<usize>>> =
+                partial_line_resolver::get_indices_of_ranged_element(
+                    &unparsed_lines,
+                    &FNRangedElementType::note(),
+                );
+
+            println!("Notes Indices: {:?}", indices.unwrap());
         }
     }
 
