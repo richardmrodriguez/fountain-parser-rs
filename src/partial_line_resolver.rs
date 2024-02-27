@@ -153,15 +153,15 @@ fn get_sorted_open_close_global_indices(
 fn get_sorted_indices(indices: usize) -> Vec<usize> {
     todo!()
 }
-/// TODO: Refactor this to also give local indices of patterns within the line string for each line.
-/// Returns a HashMap:
+/// Returns a HashMap of Global and Local indices for "Opens" and "Closes" patterns from an `FNRangedElementType`.
 ///```
 /// "Opens": Hashmap<global_index, local_index_set>>
 /// "Closes": Hashmap<global_index, local_index_set>>
 ///```
 /// NOTE: Opens and Closes have to be MATCHED and VALIDATED:
-/// - Some opens or closes may be dangling because they don't have a match
-/// - Some opens or closes may not make a valid pair because there is an empty line between them
+/// - Some opens or closes may be orphaned because they don't have a match
+/// - Some opens or closes may not make a valid pair because there is an `empty line` between them
+/// - An empty line in the context of Notes and Boneyards means a line with zero text OR if only whitespace, less than two spaces
 pub fn get_global_and_local_indices_of_ranged_element(
     lines: &Vec<FNLine>,
     ranged_element_type: &FNRangedElementType,
@@ -214,6 +214,20 @@ pub fn get_true_lines_from_partials(partials: &HashMap<String, HashSet<usize>>) 
     // Returns a HashMap<partial_index, true_line_string>
 }
 
+/// Returns an optional `PartialLineType` for a given
+/// `FNRangedElementType` and `FNLine`.
+///
+/// This function uses the `Opens` and `Closes` strings from the `FNRangedElementType` and
+/// checks for the presence and/or pattern of valid pairs. If an open or close is unpaired, it is considered an orphan.
+/// If it is a partial line, this returns a `Some(PartialLineType)`:
+///
+/// - `SelfContained` - A single line which contains both "invisible" text like `Note` or `Boneyard`, as well as printable text.
+/// - `OrphanedOpens` - There is at least 1
+/// - `OrphanedCloses`
+/// - `OrphanedOpensAndCloses`
+///
+/// If there are no opens or closes, or if there is no non-invisble text, this returns `None`.
+///
 pub fn get_local_partial_type_for_single_line(
     line: &FNLine,
     ranged_element_type: &FNRangedElementType,
@@ -247,11 +261,11 @@ pub fn get_local_partial_type_for_single_line(
     if has_orphaned_closes && has_orphaned_opens {
         return Some(PartialLineType::OrphanedOpenAndClose);
     }
-    if has_orphaned_closes {
-        return Some(PartialLineType::OrphanedClose);
-    }
     if has_orphaned_opens {
         return Some(PartialLineType::OrphanedOpen);
+    }
+    if has_orphaned_closes {
+        return Some(PartialLineType::OrphanedClose);
     }
 
     // No more stray or dangling opens or closes after this point
@@ -271,15 +285,11 @@ pub fn get_local_partial_type_for_single_line(
         return Some(PartialLineType::SelfContained);
     }
 
-    /* if line.raw_string.starts_with(&opens_pattern) && line.raw_string.ends_with(&closes_pattern) {
-        //This SHOULD mean that the line both starts with an open and ends with a close
-        return None;
-    } */
     // find if there is text in the middle
     // look for case where an open is after a close: ]][[
     // the distance between the open and close should be >= 1: ]] [[
     for (_opn_meta_index, open_local_idx) in opens_local_indices.iter().enumerate() {
-        for (cls_meta_index, cls_local_idx) in closes_local_indices.iter().enumerate() {
+        for (_cls_meta_index, cls_local_idx) in closes_local_indices.iter().enumerate() {
             if open_local_idx > cls_local_idx {
                 // This is the only close local index before the current open local index
                 if open_local_idx - cls_local_idx > 0 {

@@ -21,10 +21,9 @@ use crate::fountain_line::FNLine;
 
 // ----- Public Functions -----
 
-/// This function takes a raw string `text` which represents an entire document or file.
+/// Returns a `Vector` of fountain-parsed `FNLine` objects for a raw text document string.
 ///
-/// This returns a list of fountain-parsed `FNLine` objects. Each `FNLine` contains the `string`, the `LineType` for the line, and other metadata as properties.
-///
+/// Each `FNLine` contains the `string`, the `LineType` for the line, and other metadata as properties.
 pub fn get_parsed_lines_from_raw_string(text: String) -> Vec<FNLine> {
     let lines: Vec<FNLine> = get_unparsed_line_array_from_raw_string(Some(text));
 
@@ -33,7 +32,8 @@ pub fn get_parsed_lines_from_raw_string(text: String) -> Vec<FNLine> {
 
 /// Splits the document by newlines, then returns a list of Unparsed `FNLine` objects.
 ///
-/// Each `FNLine` object contains a single line.
+/// Each `FNLine` object contains a single line of text, as well as metadata and attributes such as `LineType`
+/// and the line's position within the document string.
 pub fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLine> {
     let mut unparsed_lines: Vec<FNLine> = vec![];
 
@@ -63,9 +63,7 @@ pub fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLi
     unparsed_lines
 }
 
-// ----- Private Functions -----
-
-fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
+pub fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
     // the actual parsing
     let mut index: usize = 0;
 
@@ -94,8 +92,9 @@ fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
     cloned_lines_vec
 }
 
-// Parses the line type for given line. It *has* to know its line index.
+// ----- Private Functions -----
 
+/// Parses and returns the `LineType` for a given line.
 fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
     let empty_line = FNLine {
         fn_type: LineType::Unparsed,
