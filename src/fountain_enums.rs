@@ -3,7 +3,7 @@ use std::default;
 use enum_iterator::{all, Sequence};
 
 #[derive(Debug, PartialEq, Sequence, Clone, Default)]
-pub enum LineType {
+pub enum FNLineType {
     Empty = 0,
     Section = 1,
     Synopse = 2,
@@ -38,9 +38,9 @@ pub enum LineType {
     SingularInvisible, // This line ONLY contains a singular, self-contained invisible line, with no other text
 }
 
-impl LineType {
-    pub fn vec_of_line_types() -> Vec<LineType> {
-        all::<LineType>().collect::<Vec<_>>()
+impl FNLineType {
+    pub fn vec_of_line_types() -> Vec<FNLineType> {
+        all::<FNLineType>().collect::<Vec<_>>()
     }
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -74,7 +74,7 @@ impl FNRangedElementType {
     }
 }
 #[derive(Debug, PartialEq, Clone)]
-pub enum PartialLineType {
+pub enum FNPartialLineType {
     SelfContained,
     OrphanedOpen,
     OrphanedClose,
