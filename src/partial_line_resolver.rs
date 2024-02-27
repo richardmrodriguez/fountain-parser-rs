@@ -6,6 +6,8 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 use crate::fountain_enums::{FNRangedElementType, LineType, PartialLineType};
 use crate::fountain_line::FNLine;
 
@@ -220,75 +222,73 @@ pub fn get_local_partial_type_for_single_line(
 ) -> Option<PartialLineType> {
     let (opens_pattern, closes_pattern) = ranged_element_type.get_open_and_close_patterns();
 
-    if line.raw_string.contains(&opens_pattern) && line.raw_string.contains(&closes_pattern) {
-        let opens_local_indices: &Vec<usize> = opens_locals_opt.unwrap();
-        let closes_local_indices: &Vec<usize> = closes_locals_opt.unwrap();
+    let contains_opens: bool = line.raw_string.contains(&opens_pattern);
+    let contains_closes: bool = line.raw_string.contains(&closes_pattern);
 
-        // Handling DANGLING / ORPHANED opens or closes
-        if closes_local_indices.first() < opens_local_indices.first() {
-            if opens_local_indices.last() > closes_local_indices.last() {
-                //dangling open and close
-                return Some(PartialLineType::OrphanedOpenAndClose);
-            }
-            //dangling close
-            return Some(PartialLineType::OrphanedClose);
-        }
-        if opens_local_indices.last() > closes_local_indices.last() {
-            //dangling open
-            return Some(PartialLineType::OrphanedOpen);
-        }
-        // No more stray or dangling opens or closes
-        // now we have to look at the actual string to determine if there's actually any text,
-        // or if this whole line is just a standalone note / boneyard
-        if line.raw_string.starts_with(&opens_pattern) && line.raw_string.ends_with(&closes_pattern)
-        {
-            //This SHOULD mean that the line both starts with an open and ends with a close
-            return None;
-        }
-        if opens_local_indices.first() > Some(&0) {
-            //there might be text at the beginning
-            return Some(PartialLineType::SelfContained);
-        }
-        if closes_local_indices.last() < Some(&line.raw_string.len()) {
-            return Some(PartialLineType::SelfContained);
-        }
+    if !contains_opens && !contains_closes {
+        return None;
+    }
+    if contains_opens && !contains_closes {
+        return Some(PartialLineType::OrphanedOpen);
+    }
+    if !contains_opens && contains_closes {
+        return Some(PartialLineType::OrphanedClose);
+    }
 
-        // find if there is text in the middle
-        // look for case where an open is after a close: ]][[
-        // the distance between the open and close should be >= 1: ]] [[]]
-        for (_opn_meta_index, open_local_idx) in opens_local_indices
-            .iter()
-            .skip(1)
-            .take(opens_local_indices.len() - 2)
-            .enumerate()
-        {
-            for (cls_meta_index, cls_local_idx) in closes_local_indices
-                .iter()
-                .skip(1)
-                .take(closes_local_indices.len() - 2)
-                .enumerate()
-            {
-                if cls_local_idx < open_local_idx {
-                    if let Some(_next_close) = closes_local_indices.get(cls_meta_index + 1) {
-                        //if there is another close index that is still less than the current open index,
-                        //continue
-                        continue;
-                    }
+    // If program gets here, the string must contain both opens and closes
 
-                    // This is the only close local index before the current open local index
-                    if open_local_idx - cls_local_idx > 0 {
-                        return Some(PartialLineType::SelfContained);
-                    }
+    let opens_local_indices: &Vec<usize> = opens_locals_opt.unwrap();
+    let closes_local_indices: &Vec<usize> = closes_locals_opt.unwrap();
+
+    // Handling DANGLING / ORPHANED opens or closes
+    let has_orphaned_opens = opens_local_indices.last() > closes_local_indices.last();
+    let has_orphaned_closes = closes_local_indices.first() < opens_local_indices.first();
+
+    if has_orphaned_closes && has_orphaned_opens {
+        return Some(PartialLineType::OrphanedOpenAndClose);
+    }
+    if has_orphaned_closes {
+        return Some(PartialLineType::OrphanedClose);
+    }
+    if has_orphaned_opens {
+        return Some(PartialLineType::OrphanedOpen);
+    }
+
+    // No more stray or dangling opens or closes after this point
+    // The line MUST look like one of these at this point:
+    //
+    // [[ ... ]] or /* ...  */
+    //
+    // now we have to look at the actual string to determine if there's actually any text,
+    // or if this whole line is just a standalone note / boneyard
+    if !line.raw_string.starts_with(&opens_pattern) {
+        //there might be text at the beginning
+
+        return Some(PartialLineType::SelfContained);
+    }
+    if !line.raw_string.ends_with(&closes_pattern) {
+        //there might be text at the end
+        return Some(PartialLineType::SelfContained);
+    }
+
+    /* if line.raw_string.starts_with(&opens_pattern) && line.raw_string.ends_with(&closes_pattern) {
+        //This SHOULD mean that the line both starts with an open and ends with a close
+        return None;
+    } */
+    // find if there is text in the middle
+    // look for case where an open is after a close: ]][[
+    // the distance between the open and close should be >= 1: ]] [[
+    for (_opn_meta_index, open_local_idx) in opens_local_indices.iter().enumerate() {
+        for (cls_meta_index, cls_local_idx) in closes_local_indices.iter().enumerate() {
+            if open_local_idx > cls_local_idx {
+                // This is the only close local index before the current open local index
+                if open_local_idx - cls_local_idx > 0 {
+                    return Some(PartialLineType::SelfContained);
                 }
             }
         }
     }
-    if line.raw_string.contains(&opens_pattern) {
-        return Some(PartialLineType::OrphanedOpen);
-    }
-    if line.raw_string.contains(&closes_pattern) {
-        return Some(PartialLineType::OrphanedClose);
-    }
+
     None
 }
 

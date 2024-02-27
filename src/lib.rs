@@ -1,9 +1,6 @@
 // This Fountain Parsing library uses code derived from "Beat", by Lauri-Matti Parppei.
 // "Beat" Github: https://github.com/lmparppei/Beat/
 
-use std::collections::HashSet;
-use std::fs;
-
 pub mod fountain_enums;
 pub mod fountain_line;
 pub mod helper_funcs;
@@ -11,11 +8,10 @@ pub mod location_and_length;
 pub mod partial_line_resolver;
 pub mod static_fountain_parser;
 pub mod static_fountain_preparser;
-use fountain_line::FNLine;
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashSet, fs};
+    use std::fs;
 
     use crate::{
         fountain_enums::FNRangedElementType, fountain_line::FNLine, partial_line_resolver,
