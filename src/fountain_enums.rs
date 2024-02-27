@@ -1,6 +1,8 @@
+use std::default;
+
 use enum_iterator::{all, Sequence};
 
-#[derive(Debug, PartialEq, Sequence, Clone)]
+#[derive(Debug, PartialEq, Sequence, Clone, Default)]
 pub enum LineType {
     Empty = 0,
     Section = 1,
@@ -28,10 +30,12 @@ pub enum LineType {
     More = 23,             // fake element for exporting
     DualDialogueMore = 24, // fake element for exporting
     TypeCount = 25, // This is the the max number of line types, used in `for` loops and enumerations, can be ignored
+    #[default]
     Unparsed = 99,
-    PartialLineStart,
-    PartialLineMiddle,
-    PartialLineEnd,
+    PartialLineSingle, // self contained partial line; may contain at least 1 ranged element, but also contains SOME non-invisible text
+    PartialLineMiddle, // this line has ZERO opens or closes BUT it is between other valid PartialLine elements
+    PartialLineMulti,  // This contains at least 1 dangling open or close
+    SingularInvisible, // This line ONLY contains a singular, self-contained invisible line, with no other text
 }
 
 impl LineType {
@@ -39,7 +43,7 @@ impl LineType {
         all::<LineType>().collect::<Vec<_>>()
     }
 }
-
+#[derive(Debug, Clone, PartialEq)]
 pub enum FNRangedElementType {
     Boneyard { open: String, close: String },
     Note { open: String, close: String },
@@ -60,4 +64,19 @@ impl FNRangedElementType {
             close: String::from("]]"),
         }
     }
+
+    pub fn get_open_and_close_patterns(&self) -> (String, String) {
+        match self {
+            FNRangedElementType::Boneyard { open, close }
+            | FNRangedElementType::Note { open, close }
+            | FNRangedElementType::Other { open, close } => (open.clone(), close.clone()),
+        }
+    }
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum PartialLineType {
+    SelfContained,
+    OrphanedOpen,
+    OrphanedClose,
+    OrphanedOpenAndClose,
 }

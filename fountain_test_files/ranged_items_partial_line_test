@@ -1,6 +1,7 @@
-INT. HOUSE - NIGHT
+[[
+  Some text
+  Other text
+]]
 
-The door creaks open.
-
-On the wall, [[multiline
-note]] a shadow appears.
+[[Standalone Note]]
+[[Note with]] visible text

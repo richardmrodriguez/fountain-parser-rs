@@ -13,15 +13,10 @@
 
 //  Relased under GPL
 
-use enum_iterator::{first, last};
-use std::io::empty;
-use std::str::FromStr;
 use std::vec;
 use unicode_segmentation::UnicodeSegmentation;
 
-//use enum_iterator::previous;
-
-use crate::fountain_consts::LineType;
+use crate::fountain_enums::LineType;
 use crate::fountain_line::FNLine;
 
 // ----- Public Functions -----
@@ -36,6 +31,9 @@ pub fn get_parsed_lines_from_raw_string(text: String) -> Vec<FNLine> {
     get_parsed_lines_from_line_vec(lines)
 }
 
+/// Splits the document by newlines, then returns a list of Unparsed `FNLine` objects.
+///
+/// Each `FNLine` object contains a single line.
 pub fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLine> {
     let mut unparsed_lines: Vec<FNLine> = vec![];
 
@@ -54,7 +52,7 @@ pub fn get_unparsed_line_array_from_raw_string(text: Option<String>) -> Vec<FNLi
         unparsed_lines.push(FNLine {
             fn_type: LineType::Unparsed,
             string: r.to_string(),
-            original_string: r.to_string(),
+            raw_string: r.to_string(),
             position: position,
             ..Default::default()
         });
@@ -111,8 +109,8 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
         line = line_ref;
     }
 
-    //let mut next_line: Result<&FNLine, &str> = Result::Err("No previous line.");
-    let mut previous_line: Result<&FNLine, &str> = Result::Err("No next line.");
+    //let mut next_line: Result<&FNLine, &str> = Result::Err("No next line.");
+    let mut previous_line: Result<&FNLine, &str> = Result::Err("No previous line.");
 
     if !lines.is_empty() {
         if index > 0 {
@@ -132,7 +130,7 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> LineType {
     };
 
     // --------- Handle empty lines first
-    let empty_lines_result: Option<LineType> = _check_if_empty_lines(line);
+    let empty_lines_result: Option<LineType> = _check_if_empty_line(line);
     if let Some(line_type) = empty_lines_result {
         return line_type;
     }
@@ -258,7 +256,7 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
     let first_grapheme = first_grapheme_option.unwrap_or_default();
     let last_grapheme = last_grapheme_option.unwrap_or_default();
 
-    // TODO:
+    // TODO: Handle escaped characters outside of the static parser
     // Check for escaped characters
     // if (firstChar == '\\'):
     //    first_unescaped = hf.find_first_unescaped_char_in_string(line.string)
@@ -400,7 +398,7 @@ fn _check_if_character(line: &FNLine, previous_line: &Result<&FNLine, &str>) -> 
     Some(LineType::Character)
 }
 
-fn _check_if_empty_lines(line: &FNLine) -> Option<LineType> {
+fn _check_if_empty_line(line: &FNLine) -> Option<LineType> {
     if line.string.len() == 0 {
         Some(LineType::Empty)
     } else {

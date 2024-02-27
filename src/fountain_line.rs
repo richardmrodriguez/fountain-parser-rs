@@ -10,14 +10,14 @@ use std::collections::HashSet;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::fountain_consts::LineType;
+use crate::fountain_enums::LineType;
 use crate::location_and_length::LocationAndLength;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FNLine {
     pub fn_type: LineType,
     pub string: String,
-    pub original_string: String,
+    pub raw_string: String,
     pub position: i32,        //  Position (starting index) )in document
     pub length: i32,          //  Length of string
     pub section_depth: i32, //  If the line is an outline element (section/heading) this value contains the section depth
@@ -51,7 +51,7 @@ impl Default for FNLine {
         FNLine {
             fn_type: LineType::Unparsed,
             string: String::from(""),
-            original_string: String::from(""),
+            raw_string: String::from(""),
             position: 0,
             length: 0,
             section_depth: 0,
@@ -94,20 +94,17 @@ impl FNLine {
 
     //  Returns TRUE for any title page element
     pub fn is_title_page(&self) -> bool{
-        if self.fn_type == LineType::TitlePageTitle ||
-        self.fn_type == LineType::TitlePageCredit ||
-        self.fn_type == LineType::TitlePageAuthor ||
-        self.fn_type == LineType::TitlePageDraftDate ||
-        self.fn_type == LineType::TitlePageContact ||
-        self.fn_type == LineType::TitlePageSource // ||
-        // self.fn_type == LineType::TitlePageUnknown
-        {
-            true
+        match self.fn_type {
+            LineType::TitlePageTitle        |
+            LineType::TitlePageCredit       |
+            LineType::TitlePageAuthor       |
+            LineType::TitlePageDraftDate    |
+            LineType::TitlePageContact      |
+            LineType::TitlePageSource //    |
+            // LineType::TitlePageUnknown // Not strictly part of fountain spec; for use in a beat-compatible app
+             => true,
+             _ => false
         }
-        else {
-            false
-        }
-                
     }
     
 
