@@ -23,7 +23,7 @@ mod tests {
     };
 
     #[test]
-    #[ignore = "reason"]
+    #[ignore = "just prints line types from LineType enum"]
     fn print_all_line_types() {
         use super::fountain_enums::LineType;
         let line_types_vec: Vec<LineType> = LineType::vec_of_line_types();
@@ -35,15 +35,15 @@ mod tests {
 
     #[test]
     fn test_static_parser() {
-        let file_path = "testfile.txt";
+        let file_path = "fountain_test_files/general_without_ranged_elements.txt";
         let file_result: Result<String, std::io::Error> = fs::read_to_string(file_path);
         match file_result {
             Ok(text) => {
                 let lines = static_fountain_parser::get_parsed_lines_from_raw_string(text);
                 print_all_lines_with_line_type(lines);
             }
-            Err(err) => {
-                eprintln!("The test file or file path was not valid. {}", err)
+            Err(_err) => {
+                panic!("File or file path was invalid.")
             }
         }
     }

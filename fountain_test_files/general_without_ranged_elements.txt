@@ -9,7 +9,6 @@ Source: Story by InnerSloth
 Draft date: 04 - 09 - 2024
 Contact: john@gaming.sus
 
-
 FADE IN:
 
 int. HOUSE - NIGHT
@@ -37,7 +36,6 @@ LADY 2^
 Yeah, get out!
   
 You aren't welcome in this house!
-[[This is a note.]]
 
 Lady 2 SWINGS --
   
@@ -49,19 +47,10 @@ And instead hits a support beam. The house comes crumbling down upon them.
 
 # ACT 2
 ## The Big Scaries
-[[Another note here!]]
 
 ARBITRARY TRANSITION:
 
-
 ext. house - night 
-[[
-What kind of house is this? Old? Yellow?
 
-I'm not sure anymore.
-]]
-
-
-INT. HOUSE - DAYTIME
 The ladies are crushed under the rubble of the house.
 =This is the big moment.
