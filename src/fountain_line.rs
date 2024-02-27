@@ -10,12 +10,12 @@ use std::collections::HashSet;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::fountain_enums::LineType;
+use crate::fountain_enums::FNLineType;
 use crate::location_and_length::LocationAndLength;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FNLine {
-    pub fn_type: LineType,
+    pub fn_type: FNLineType,
     pub string: String,
     pub raw_string: String,
     pub position: i32,        //  Position (starting index) )in document
@@ -49,7 +49,7 @@ pub struct FNLine {
 impl Default for FNLine {
     fn default() -> Self {
         FNLine {
-            fn_type: LineType::Unparsed,
+            fn_type: FNLineType::Unparsed,
             string: String::from(""),
             raw_string: String::from(""),
             position: 0,
@@ -83,24 +83,24 @@ impl FNLine {
     
 
     pub fn can_be_split_paragraph(&self) -> bool{
-        self.fn_type == LineType::Action
-            ||self.fn_type == LineType::Lyrics 
-            || self.fn_type == LineType::Centered
+        self.fn_type == FNLineType::Action
+            ||self.fn_type == FNLineType::Lyrics 
+            || self.fn_type == FNLineType::Centered
     }
     //  Returns TRUE for scene, section and synopsis elements
     pub fn is_outline_element(&self) -> bool{
-        self.fn_type == LineType::Heading || self.fn_type == LineType::Section
+        self.fn_type == FNLineType::Heading || self.fn_type == FNLineType::Section
     }
 
     //  Returns TRUE for any title page element
     pub fn is_title_page(&self) -> bool{
         match self.fn_type {
-            LineType::TitlePageTitle        |
-            LineType::TitlePageCredit       |
-            LineType::TitlePageAuthor       |
-            LineType::TitlePageDraftDate    |
-            LineType::TitlePageContact      |
-            LineType::TitlePageSource //    |
+            FNLineType::TitlePageTitle        |
+            FNLineType::TitlePageCredit       |
+            FNLineType::TitlePageAuthor       |
+            FNLineType::TitlePageDraftDate    |
+            FNLineType::TitlePageContact      |
+            FNLineType::TitlePageSource //    |
             // LineType::TitlePageUnknown // Not strictly part of fountain spec; for use in a beat-compatible app
              => true,
              _ => false
@@ -110,9 +110,9 @@ impl FNLine {
 
     //  Checks if the line is completely non-printing __in the eyes of parsing__.
     pub fn is_invisible(self) -> bool{
-        self.fn_type == LineType::Section 
+        self.fn_type == FNLineType::Section 
         //|| self.omitted
-        || self.fn_type == LineType::Synopse 
+        || self.fn_type == FNLineType::Synopse 
         || self.is_title_page() // NOTE: ? why would title page be invisible?
     }
 
@@ -132,50 +132,50 @@ impl FNLine {
 
     //  Returns `true` for any dialogue element, including character cue
     pub fn is_dialogue(&self) -> bool{
-        self.fn_type == LineType::Character 
-        || self.fn_type == LineType::Parenthetical 
-        || self.fn_type == LineType::Dialogue 
-        || self.fn_type == LineType::More
+        self.fn_type == FNLineType::Character 
+        || self.fn_type == FNLineType::Parenthetical 
+        || self.fn_type == FNLineType::Dialogue 
+        || self.fn_type == FNLineType::More
     }
 
     //  Returns `true` for dialogue block elements, excluding character cues
     pub fn is_dialogue_element(&self) -> bool{
         //// Is SUB-DIALOGUE element
-        self.fn_type == LineType::Parenthetical || self.fn_type == LineType::Dialogue
+        self.fn_type == FNLineType::Parenthetical || self.fn_type == FNLineType::Dialogue
     }
 
     //  Returns `true` for any dual dialogue element, including character cue
     pub fn is_dual_dialogue(&self) -> bool{
-        self.fn_type == LineType::DualDialogue 
-        || self.fn_type == LineType::DualDialogueCharacter 
-        || self.fn_type == LineType::DualDialogueParenthetical 
-        || self.fn_type == LineType::DualDialogueMore
+        self.fn_type == FNLineType::DualDialogue 
+        || self.fn_type == FNLineType::DualDialogueCharacter 
+        || self.fn_type == FNLineType::DualDialogueParenthetical 
+        || self.fn_type == FNLineType::DualDialogueMore
     }
 
     //  Returns `true` for dual dialogue block elements, excluding character cues
     pub fn is_dual_dialogue_element(&self) -> bool{
-        self.fn_type == LineType::DualDialogueParenthetical 
-        || self.fn_type == LineType::DualDialogue 
-        || self.fn_type == LineType::DualDialogueMore
+        self.fn_type == FNLineType::DualDialogueParenthetical 
+        || self.fn_type == FNLineType::DualDialogue 
+        || self.fn_type == FNLineType::DualDialogueMore
     }
 
     //  Returns `true` for ANY character cue (single || dual)
     pub fn is_any_character(&self) -> bool{
-        self.fn_type == LineType::Character 
-        || self.fn_type == LineType::DualDialogueCharacter
+        self.fn_type == FNLineType::Character 
+        || self.fn_type == FNLineType::DualDialogueCharacter
     }
 
     //  Returns `true` for ANY parenthetical line (single || dual)
     pub fn is_any_parenthetical(&self) -> bool{
-        self.fn_type == LineType::Parenthetical 
-        || self.fn_type == LineType::DualDialogueParenthetical
+        self.fn_type == FNLineType::Parenthetical 
+        || self.fn_type == FNLineType::DualDialogueParenthetical
     }
 
     //  Returns `true` for ANY dialogue line (single || dual)
     pub fn is_any_dialogue(&self) -> bool{
     
-        self.fn_type == LineType::Dialogue 
-        ||self.fn_type == LineType::DualDialogue
+        self.fn_type == FNLineType::Dialogue 
+        ||self.fn_type == FNLineType::DualDialogue
     }
 
     // pragma mark - Title Page Stuff

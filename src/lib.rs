@@ -21,8 +21,8 @@ mod tests {
     #[test]
     #[ignore = "just prints line types from LineType enum"]
     fn print_all_line_types() {
-        use super::fountain_enums::LineType;
-        let line_types_vec: Vec<LineType> = LineType::vec_of_line_types();
+        use super::fountain_enums::FNLineType;
+        let line_types_vec: Vec<FNLineType> = FNLineType::vec_of_line_types();
         for t in line_types_vec {
             let t1 = t.clone() as i32;
             println!("Line type variant: {:?}, {:?}", t1, t);

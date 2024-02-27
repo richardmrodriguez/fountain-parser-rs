@@ -8,7 +8,7 @@ use std::hash::Hash;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::fountain_enums::{FNRangedElementType, LineType, PartialLineType};
+use crate::fountain_enums::{FNLineType, FNPartialLineType, FNRangedElementType};
 use crate::fountain_line::FNLine;
 
 pub fn get_partial_line_vec_for_ranged_element_type(
@@ -53,7 +53,7 @@ pub fn get_partial_line_vec_for_ranged_element_type(
     let mut partial_lines_vec: Vec<(
         HashMap<usize, usize>, // Open Global: Open Local (first valid open)
         HashMap<usize, usize>, // Close Global: Close Local (Last valid close)
-        PartialLineType,
+        FNPartialLineType,
     )> = Vec::new();
 
     for (_, global_index) in sorted_opens_and_closes_global_indices.iter().enumerate() {
@@ -80,16 +80,16 @@ pub fn get_partial_line_vec_for_ranged_element_type(
                 Some(cur_opens_locals),
                 Some(cur_closes_locals),
             ) {
-                Some(PartialLineType::SelfContained) => {
+                Some(FNPartialLineType::SelfContained) => {
                     todo!()
                 }
-                Some(PartialLineType::OrphanedClose) => {
+                Some(FNPartialLineType::OrphanedClose) => {
                     todo!()
                 }
-                Some(PartialLineType::OrphanedOpen) => {
+                Some(FNPartialLineType::OrphanedOpen) => {
                     todo!()
                 }
-                Some(PartialLineType::OrphanedOpenAndClose) => {
+                Some(FNPartialLineType::OrphanedOpenAndClose) => {
                     todo!()
                 }
                 None => {}
@@ -153,7 +153,8 @@ fn get_sorted_open_close_global_indices(
 fn get_sorted_indices(indices: usize) -> Vec<usize> {
     todo!()
 }
-/// Returns a HashMap of Global and Local indices for "Opens" and "Closes" patterns from an `FNRangedElementType`.
+/// Returns a HashMap of Global and Local indices across a `Vector` of `FNLine`
+/// for "Opens" and "Closes" patterns from a given`FNRangedElementType`.
 ///```
 /// "Opens": Hashmap<global_index, local_index_set>>
 /// "Closes": Hashmap<global_index, local_index_set>>
@@ -233,7 +234,7 @@ pub fn get_local_partial_type_for_single_line(
     ranged_element_type: &FNRangedElementType,
     opens_locals_opt: Option<&Vec<usize>>,
     closes_locals_opt: Option<&Vec<usize>>,
-) -> Option<PartialLineType> {
+) -> Option<FNPartialLineType> {
     let (opens_pattern, closes_pattern) = ranged_element_type.get_open_and_close_patterns();
 
     let contains_opens: bool = line.raw_string.contains(&opens_pattern);
@@ -243,10 +244,10 @@ pub fn get_local_partial_type_for_single_line(
         return None;
     }
     if contains_opens && !contains_closes {
-        return Some(PartialLineType::OrphanedOpen);
+        return Some(FNPartialLineType::OrphanedOpen);
     }
     if !contains_opens && contains_closes {
-        return Some(PartialLineType::OrphanedClose);
+        return Some(FNPartialLineType::OrphanedClose);
     }
 
     // If program gets here, the string must contain both opens and closes
@@ -259,13 +260,13 @@ pub fn get_local_partial_type_for_single_line(
     let has_orphaned_closes = closes_local_indices.first() < opens_local_indices.first();
 
     if has_orphaned_closes && has_orphaned_opens {
-        return Some(PartialLineType::OrphanedOpenAndClose);
+        return Some(FNPartialLineType::OrphanedOpenAndClose);
     }
     if has_orphaned_opens {
-        return Some(PartialLineType::OrphanedOpen);
+        return Some(FNPartialLineType::OrphanedOpen);
     }
     if has_orphaned_closes {
-        return Some(PartialLineType::OrphanedClose);
+        return Some(FNPartialLineType::OrphanedClose);
     }
 
     // No more stray or dangling opens or closes after this point
@@ -278,11 +279,11 @@ pub fn get_local_partial_type_for_single_line(
     if !line.raw_string.starts_with(&opens_pattern) {
         //there might be text at the beginning
 
-        return Some(PartialLineType::SelfContained);
+        return Some(FNPartialLineType::SelfContained);
     }
     if !line.raw_string.ends_with(&closes_pattern) {
         //there might be text at the end
-        return Some(PartialLineType::SelfContained);
+        return Some(FNPartialLineType::SelfContained);
     }
 
     // find if there is text in the middle
@@ -293,7 +294,7 @@ pub fn get_local_partial_type_for_single_line(
             if open_local_idx > cls_local_idx {
                 // This is the only close local index before the current open local index
                 if open_local_idx - cls_local_idx > 0 {
-                    return Some(PartialLineType::SelfContained);
+                    return Some(FNPartialLineType::SelfContained);
                 }
             }
         }
