@@ -1,4 +1,4 @@
-use std::default;
+use std::{default, rc::Rc};
 
 use enum_iterator::{all, Sequence};
 
@@ -32,10 +32,7 @@ pub enum FNLineType {
     TypeCount = 25, // This is the the max number of line types, used in `for` loops and enumerations, can be ignored
     #[default]
     Unparsed = 99,
-    PartialLineSingle, // self contained partial line; may contain at least 1 ranged element, but also contains SOME non-invisible text
-    PartialLineMiddle, // this line has ZERO opens or closes BUT it is between other valid PartialLine elements
-    PartialLineMulti,  // This contains at least 1 dangling open or close
-    SingularInvisible, // This line ONLY contains a singular, self-contained invisible line, with no other text
+    PartialLine,
 }
 
 impl FNLineType {
@@ -73,10 +70,11 @@ impl FNRangedElementType {
         }
     }
 }
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Sequence)]
 pub enum FNPartialLineType {
     SelfContained,
     OrphanedOpen,
     OrphanedClose,
     OrphanedOpenAndClose,
+    InvisibleOnly,
 }

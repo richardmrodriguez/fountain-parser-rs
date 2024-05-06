@@ -1,0 +1,35 @@
+
+[[Standalone Note]]
+[[Note with]] visible text
+[[Some notes]] with visible text [[sandwiched between]]
+
+[[
+This text would otherwise be action, but
+because it is between an orphaned open and an orphaned close,
+all of this is just part of a multiline note.
+These lines should probably be assigned
+"InvisbleMiddle" or something as its FNLineType.
+]]
+
+[[The middle line is
+[[Locally a SelfContained]] but becomes an InvisibleOnly
+because it is wrapped in a larger multiline note.]]
+
+[[This orphaned open
+[[consumes the first open of this ]] SelfContained line, but this visible text remains.
+
+[[This SelfContained line has]] otherwise visible text, BUT
+it's consumed by this orphaned close.]]
+
+[[This orphaned open
+will not be paired with the
+orphaned close down there, because
+
+There is a completely empty line between. So, this line right here is just Action.]]
+
+The above is dumb.
+If we are going to have multiline notes, 
+just have the opening brackets pair with the next closing brackets.
+Why can't there be an empty line between them?
+
+Should we even be trying to write notes in plain text fountain?

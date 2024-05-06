@@ -9,4 +9,5 @@ edition = "2021"
 enum-iterator = "1.5.0"
 regex = "1.10.3"
 unicode-segmentation = "1.11.0"
+uuid = "1.7.0"
 

@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::fountain_enums::FNLineType;
+use crate::fountain_enums::{FNLineType, FNPartialLineType};
 use crate::location_and_length::LocationAndLength;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -43,6 +43,10 @@ pub struct FNLine {
     pub omitted_ranges: HashSet<i32>,
     pub escape_ranges: HashSet<i32>,
     pub removal_suggestion_ranges: HashSet<i32>,
+    pub note_type: Option<FNPartialLineType>,
+    pub boneyard_type: Option<FNPartialLineType>,
+
+    
     //_uuid: uuid
 }
 
@@ -67,6 +71,8 @@ impl Default for FNLine {
             omitted_ranges: HashSet::default(),
             escape_ranges: HashSet::default(),
             removal_suggestion_ranges: HashSet::default(),
+            note_type: None,
+            boneyard_type: None
         }
     }
 }
@@ -105,6 +111,17 @@ impl FNLine {
              => true,
              _ => false
         }
+    }
+    
+    pub fn is_partial_line(&self) -> bool{
+        if let Some(_) = self.note_type {
+            return true;
+        }
+
+        if let Some(_)= self.boneyard_type {
+            return true;
+        }
+        false
     }
     
 
@@ -179,7 +196,7 @@ impl FNLine {
     }
 
     // pragma mark - Title Page Stuff
-    pub fn get_title_page_key(&self) -> String{
+    pub fn get_title_page_key(&self) -> String{ // TODO: Make this return an Optional string instead of using empty strings as special values
         if self.string.len() == 0{
             return String::from("");
         }

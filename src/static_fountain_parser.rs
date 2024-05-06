@@ -13,6 +13,8 @@
 
 //  Relased under GPL
 
+//! The static_fountain_parser
+
 use std::vec;
 use unicode_segmentation::UnicodeSegmentation;
 
