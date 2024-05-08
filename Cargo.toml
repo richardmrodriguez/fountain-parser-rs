@@ -1,6 +1,6 @@
 [package]
 name = "fountain-parser-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "A library to parse Fountain-formatted plain text files."
 license = "GPL-3.0"

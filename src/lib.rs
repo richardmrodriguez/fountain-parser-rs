@@ -15,13 +15,13 @@
 
 // use fountain_enums::FNRangedElementType;
 
+pub mod fountain_enums;
+pub mod fountain_line;
+pub mod location_and_length;
 pub mod static_fountain_parser;
 
-mod fountain_enums;
-mod fountain_line;
 mod fountain_partial_line_range;
 mod helper_funcs;
-mod location_and_length;
 mod partial_line_resolver;
 mod static_fountain_preparser;
 
