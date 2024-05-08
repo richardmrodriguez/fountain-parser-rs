@@ -1,4 +1,5 @@
-use std::{default, rc::Rc};
+use core::fmt;
+use std::{default, fmt::Formatter, rc::Rc};
 
 use enum_iterator::{all, Sequence};
 
@@ -40,6 +41,13 @@ impl FNLineType {
         all::<FNLineType>().collect::<Vec<_>>()
     }
 }
+
+impl fmt::Display for FNLineType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum FNRangedElementType {
     Boneyard { open: String, close: String },
