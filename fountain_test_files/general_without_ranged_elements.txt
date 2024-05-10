@@ -36,6 +36,7 @@ LADY 2^
 Yeah, get out!
   
 You aren't welcome in this house!
+...Seriously, please leave.
 
 Lady 2 SWINGS --
   
@@ -52,5 +53,5 @@ ARBITRARY TRANSITION:
 
 ext. house - night 
 
-The ladies are crushed under the rubble of the house.
+...The ladies are crushed under the rubble of the house.
 =This is the big moment.

@@ -23,7 +23,7 @@ pub struct FNLine {
     pub section_depth: i32, //  If the line is an outline element (section/heading) this value contains the section depth
     pub scene_number: String, //  If the line is an outline element, this value contains the scene number, but only after the outline structure has been updated
     pub color: String,        //  Color for outline element (`nil` or empty if no color is set)
-
+    pub is_forced: bool,        // Is this line "forced" by using special characters or not
     pub forced_character_cue: bool, //  This line was forced to be a character cue in editor
 
     // @interface Line() // syntax hurty : these 3 properties are private properties I guess
@@ -72,7 +72,8 @@ impl Default for FNLine {
             escape_ranges: HashSet::default(),
             removal_suggestion_ranges: HashSet::default(),
             note_type: None,
-            boneyard_type: None
+            boneyard_type: None,
+            is_forced: false,
         }
     }
 }

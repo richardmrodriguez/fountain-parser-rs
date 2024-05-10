@@ -74,7 +74,7 @@ pub fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
     for (l, cur_line) in lines.iter().enumerate() {
         //println!("Index", index);
         let mut cur_clone = cur_line.clone();
-        cur_clone.fn_type = parse_line_type_for(&cloned_lines_vec, index);
+        (cur_clone.fn_type, cur_clone.is_forced) = parse_line_type_for(&cloned_lines_vec, index);
 
         // Check if previous line is supposed to actually be just action
         // (Characters need 1 empty line before and 1 NON-empty line after)
@@ -97,7 +97,9 @@ pub fn get_parsed_lines_from_line_vec(lines: Vec<FNLine>) -> Vec<FNLine> {
 // ----- Private Functions -----
 
 /// Parses and returns the `LineType` for a given line.
-fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> FNLineType {
+fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> (FNLineType, bool) {
+    let mut is_forced: bool = false;
+
     let empty_line = FNLine {
         fn_type: FNLineType::Unparsed,
         ..Default::default()
@@ -133,7 +135,7 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> FNLineType {
     // --------- Handle empty lines first
     let empty_lines_result: Option<FNLineType> = _check_if_empty_line(line);
     if let Some(line_type) = empty_lines_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // --------- Check FORCED elements
@@ -141,19 +143,20 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> FNLineType {
         _check_if_forced_element(line, &previous_line_is_empty);
 
     if let Some(line_type) = forced_element_result {
-        return line_type;
+        is_forced = true;
+        return (line_type, is_forced);
     }
 
     // --------- Title page
     let title_page_result: Option<FNLineType> = _check_if_title_page_element(line, &previous_line);
     if let Some(line_type) = title_page_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // --------- Transitions
     let transition_result: Option<FNLineType> = _check_if_transition(line, &previous_line_is_empty);
     if let Some(line_type) = transition_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // Handle items which require an empty line before them.
@@ -161,30 +164,30 @@ fn parse_line_type_for(lines: &Vec<FNLine>, index: usize) -> FNLineType {
     // --------- Heading
     let heading_result: Option<FNLineType> = _check_if_heading(line, &previous_line_is_empty);
     if let Some(line_type) = heading_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // --------- Check for Dual Dialogue
     let dual_dialogue_result = _check_if_dual_dialogue(line, &previous_line);
     if let Some(line_type) = dual_dialogue_result {
-        return line_type;
+        return (line_type, is_forced);
     }
     // --------- Character
 
     let character_result: Option<FNLineType> = _check_if_character(line, &previous_line);
     if let Some(line_type) = character_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // --------- Dialogue or Parenthetical
     let dialogue_or_parenthetical_result: Option<FNLineType> =
         _check_if_dialogue_or_parenthetical(line, &previous_line);
     if let Some(line_type) = dialogue_or_parenthetical_result {
-        return line_type;
+        return (line_type, is_forced);
     }
 
     // --------- Default
-    FNLineType::Action
+    (FNLineType::Action, false)
 }
 
 // ---------- Parsing sub-functions ----------
@@ -293,7 +296,7 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
         return Some(FNLineType::Action);
     }
     // --------- FORCED Heading / Slugline
-    if first_grapheme == "." && !*previous_line_is_empty {
+    if first_grapheme == "." {
         // '.' forces a heading.
         // Because our American friends love to shoot their guns like we Finnish people love our booze,
         // screenwriters might start dialogue blocks with such "words" as '.44'
@@ -301,11 +304,10 @@ fn _check_if_forced_element(line: &FNLine, previous_line_is_empty: &bool) -> Opt
             let second_grapheme_option = line.string.graphemes(true).nth(1);
 
             if let Some(sg) = second_grapheme_option {
-                if sg != "." {
-                    return Some(FNLineType::Heading);
+                if sg == "." {
+                    return None;
                 }
             }
-            return None;
         }
 
         return Some(FNLineType::Heading);
